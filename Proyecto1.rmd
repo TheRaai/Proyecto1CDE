@@ -2,28 +2,46 @@
 title: "Proyecto 1 CDE"
 output: html_document
 date: "`r Sys.Date()`"
+author: "Tomás Cantuarias - Raimundo Moraga - Victor Valero"
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(rnaturalearth)
+library(ggplot2)
+library(sp)
+library(plotly)
+library(ggmap)
+library(rnaturalearthdata)
 ```
 
-## R Markdown
+<style>
+body {
+text-align: justify}
+</style>
+## Introducción
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+Dentro de Chile, existen varios tipos de fenómenos geológicos, ya que existen una gran cantidad de montañas, lagos, ríos, playas y puertos. Pero además de estos, existen **glaciares**, que son grandes áreas congeladas, creadas gracias a las bajas temperaturas que se encuentran en las zonas sur del país mayoritariamente. Estos serán los objetos principales de estudio en este informe.
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+El objetivo de este estudio será poder analizar las áreas de los distintos glaciares existentes en Chile y las ciudades más cercanas a estos, y poder demostrar que los glaciares con áreas mayores tienden a tener una mayor cantidad de ciudades cercanas que aquellos que tienen menores áreas.
 
-```{r cars}
-summary(cars)
+```{r include=FALSE}
+glaciares <- ne_download(scale = 10, type = 'glaciated_areas', category = 'physical', returnclass = 'sf')
 ```
 
-## Including Plots
+## Metodología
 
-You can also embed plots, for example:
+Para poder demostrar esto, se hará uso de la librería **RNaturalEarth** para conseguir las posiciones de los glaciares, utilizando un enfoque para solamente analizar los glaciares que existen en Chile. 
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+```{r glaciares, echo=FALSE}
+latitudes = c(-56, -25)#y
+longitudes <- c(-78, -65) #x
+ggplot(data=glaciares) + geom_sf()  + coord_sf(xlim = longitudes, ylim = latitudes,expand=FALSE)
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+## Datos
+Luego de filtrar los glaciares Chilenos, y conseguir las áreas de estos, se pueden resumir en la siguiente tabla:
+```{r echo=FALSE}
+summary(glaciares)
+```
+Luego de esto se procede a analizar la distancia de los glaciares con las ciudades, para poder relacionar cada glaciar con una ciudad.
