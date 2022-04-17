@@ -7,6 +7,9 @@ library(ggmap)
 library(ggridges)
 
 glaciares <- ne_download(scale = 10, type = 'glaciated_areas', category = 'physical', returnclass = 'sf')
+glaciares$name <-NULL
+sf_use_s2(FALSE)
+glaciares <- mutate(glaciares, area = st_area(glaciares))
 
 latitudes = c(-56, -15)#y
 longitudes <- c(-78, -65) #x
