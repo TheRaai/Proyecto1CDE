@@ -36,10 +36,7 @@ pal <- viridis(n=length(unique(glaciares)),direction = 1)
 leaflet() %>%
   addProviderTiles("OpenStreetMap",
                    group = "OpenStreetMap"
-  ) %>%
-  addProviderTiles("Stamen.Toner",
-                   group = "Stamen.Toner"
-  ) %>%
+  )  %>%
   addProviderTiles("Stamen.Terrain",
                    group = "Stamen.Terrain"
   ) %>% 
@@ -51,7 +48,7 @@ leaflet() %>%
               weight = 1) %>% 
   addLayersControl(
     baseGroups = c(
-      "OpenStreetMap", "Stamen.Toner",
+      "OpenStreetMap",
       "Stamen.Terrain"),
     position = "topleft"
   )
