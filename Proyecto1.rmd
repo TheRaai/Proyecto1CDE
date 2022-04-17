@@ -10,9 +10,12 @@ knitr::opts_chunk$set(echo = TRUE)
 library(rnaturalearth)
 library(ggplot2)
 library(sp)
+library(sf)
 library(plotly)
 library(ggmap)
 library(rnaturalearthdata)
+library(leaflet)
+library(viridis)
 ```
 
 <style>
@@ -27,6 +30,13 @@ El objetivo de este estudio será poder analizar las áreas de los distintos gla
 
 ```{r include=FALSE}
 glaciares <- ne_download(scale = 10, type = 'glaciated_areas', category = 'physical', returnclass = 'sf')
+sf_use_s2(FALSE)
+pop<- ne_download(scale = 10, type = 'populated_places', category = 'cultural', returnclass='sf')
+df <- ne_countries(country = 'chile',returnclass = c("sf"))
+filtered_glaciares = st_filter(glaciares, df, .pred = st_intersects)
+filtered_ciudades = st_filter(pop, df, .pred = st_intersects)
+filtered_glaciares$name <-NULL
+filtered_glaciares <- mutate(filtered_glaciares, area = st_area(filtered_glaciares))
 ```
 
 ## Metodología
@@ -36,12 +46,33 @@ Para poder demostrar esto, se hará uso de la librería **RNaturalEarth** para c
 ```{r glaciares, echo=FALSE}
 latitudes = c(-56, -25)#y
 longitudes <- c(-78, -65) #x
-ggplot(data=glaciares) + geom_sf()  + coord_sf(xlim = longitudes, ylim = latitudes,expand=FALSE)
+pal <- viridis(n=length(unique(glaciares)),direction = 1)
+
+leaflet() %>%
+  addProviderTiles("OpenStreetMap",
+                   group = "OpenStreetMap"
+  )%>%
+  addProviderTiles("Stamen.Terrain",
+                   group = "Stamen.Terrain"
+  ) %>% 
+  addPolygons(data = filtered_glaciares$geometry, 
+              fillColor  = pal,
+              fillOpacity = 0.8,
+              popup = filtered_glaciares$area,
+              color = "#FFFF00", 
+              weight = 1
+  ) %>% 
+  addLayersControl(
+    baseGroups = c(
+      "OpenStreetMap",
+      "Stamen.Terrain"),
+    position = "topleft"
+  )
 ```
 
 ## Datos
 Luego de filtrar los glaciares Chilenos, y conseguir las áreas de estos, se pueden resumir en la siguiente tabla:
 ```{r echo=FALSE}
-summary(glaciares)
+filtered_glaciares$area
 ```
 Luego de esto se procede a analizar la distancia de los glaciares con las ciudades, para poder relacionar cada glaciar con una ciudad.
