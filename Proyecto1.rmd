@@ -1,6 +1,8 @@
 ---
 title: "Proyecto 1 CDE"
-output: html_document
+output:
+    bookdown::html_document2:
+    fig_caption: yes
 date: "`r Sys.Date()`"
 author: "Tomás Cantuarias - Raimundo Moraga - Victor Valero"
 ---
@@ -16,13 +18,14 @@ library(ggmap)
 library(rnaturalearthdata)
 library(leaflet)
 library(viridis)
+library(knitr)
 ```
 
 <style>
 body {
 text-align: justify}
 </style>
-## Introducción
+## Introducción {-}
 
 Dentro de Chile, existen varios tipos de fenómenos geológicos, ya que existen una gran cantidad de montañas, lagos, ríos, playas y puertos. Pero además de estos, existen **glaciares**, que son grandes áreas congeladas, creadas gracias a las bajas temperaturas que se encuentran en las zonas sur del país mayoritariamente. Estos serán los objetos principales de estudio en este informe.
 
@@ -31,23 +34,24 @@ El objetivo de este estudio será poder analizar las áreas de los distintos gla
 ```{r include=FALSE}
 glaciares <- ne_download(scale = 10, type = 'glaciated_areas', category = 'physical', returnclass = 'sf')
 sf_use_s2(FALSE)
-pop<- ne_download(scale = 10, type = 'populated_places', category = 'cultural', returnclass='sf')
+#pop<- ne_download(scale = 10, type = 'populated_places', category = 'cultural', returnclass='sf')
 df <- ne_countries(country = 'chile',returnclass = c("sf"))
 filtered_glaciares = st_filter(glaciares, df, .pred = st_intersects)
-filtered_ciudades = st_filter(pop, df, .pred = st_intersects)
+#filtered_ciudades = st_filter(pop, df, .pred = st_intersects)
 filtered_glaciares$name <-NULL
 filtered_glaciares <- mutate(filtered_glaciares, area = st_area(filtered_glaciares))
-```
-
-## Metodología
-
-Para poder demostrar esto, se hará uso de la librería **RNaturalEarth** para conseguir las posiciones de los glaciares, utilizando un enfoque para solamente analizar los glaciares que existen en Chile. 
-
-```{r glaciares, echo=FALSE}
 latitudes = c(-56, -25)#y
 longitudes <- c(-78, -65) #x
 pal <- viridis(n=length(unique(glaciares)),direction = 1)
+filtered_glaciares <- filtered_glaciares[order(filtered_glaciares$area,decreasing=TRUE),]
+```
 
+## Metodología {-}
+
+Para poder demostrar esto, se hará uso de la librería **RNaturalEarth** para conseguir las posiciones de los glaciares, utilizando un enfoque para solamente analizar los glaciares que existen en Chile. Luego de esto, se hace un mapa que muestre los glaciares de chile (Ver gráfico \@ref(fig:glaciares)).
+
+
+```{r glaciares,fig.cap="Mapa glaciares",echo=FALSE}
 leaflet() %>%
   addProviderTiles("OpenStreetMap",
                    group = "OpenStreetMap"
@@ -70,9 +74,15 @@ leaflet() %>%
   )
 ```
 
-## Datos
-Luego de filtrar los glaciares Chilenos, y conseguir las áreas de estos, se pueden resumir en la siguiente tabla:
-```{r echo=FALSE}
-filtered_glaciares$area
+## Datos {-}
+Luego de filtrar los glaciares Chilenos, y conseguir las áreas de estos, se pueden resumir en la siguiente tabla \@ref(tab:tabla-1):
+```{r tabla-1, echo=FALSE}
+knitr::kable(head(filtered_glaciares$area,15),col.names='Área',digits = 3, format.args = list(big.mark = ",",scientific = FALSE),align='c',row.names = TRUE,caption="15 mayores áreas")
 ```
+Si bien se encuentran solamente los 15 glaciares con mayores áreas, se puede encontrar la tabla entera en la sección de [anexos].
 Luego de esto se procede a analizar la distancia de los glaciares con las ciudades, para poder relacionar cada glaciar con una ciudad.
+
+# Anexos {-}
+```{r anexo, echo=FALSE}
+knitr::kable(filtered_glaciares$area,col.names='Área',digits = 3, format.args = list(big.mark = ",",scientific = FALSE),align='c',row.names = TRUE,caption='Áreas glaciares')
+```
