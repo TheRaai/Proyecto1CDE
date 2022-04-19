@@ -10,6 +10,8 @@ pacman::p_load(tmap, sf, tidyverse, mapview, RColorBrewer, viridis,
                ggiraph, widgetframe, st)
 
 #descarga informacion de los glaciares mundiales
+sf_use_s2(FALSE)
+
 glaciares <- ne_download(scale = 10, type = 'glaciated_areas', category = 'physical', returnclass = 'sf')
 pop<- ne_download(scale = 10, type = 'populated_places', category = 'cultural', returnclass='sf')
 df <- ne_countries(country = 'chile',returnclass = c("sf"))
@@ -30,13 +32,13 @@ lat <- cent_temp[-seq(1, length(cent_temp),2)]
 filtered_glaciares['cent_long'] <- long
 filtered_glaciares['cent_lat'] <- lat
 
-filtered_glaciares['contenido'] <- paste("Área glaciar: ", filtered_glaciares$area)
+filtered_glaciares['contenido'] <- paste("?rea glaciar: ", round(filtered_glaciares$area/1000000,2))
 # dibujamos el mapa
 ggmap(mapa)
 
 list2 <-list("ciudad1","ciudad2")
 filtered_glaciares <- filtered_glaciares %>% mutate(Cercano = I(list(c(list2))))
-
+library(geosphere)
 for (n in 1:70){ #recorre los glaciares de uno en uno
   x <- list()
   i = 1
@@ -53,7 +55,7 @@ for (n in 1:70){ #recorre los glaciares de uno en uno
   filtered_glaciares$Cercano[n] <- I(list(c(x)))
 }
 
-print(x)
+print(lengths(filtered_glaciares$Cercano))
 
 pal <- viridis(n=length(unique(glaciares)),direction = 1)
 

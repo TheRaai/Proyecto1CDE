@@ -11,17 +11,18 @@ knit: (function(inputFile,encoding) {rmarkdown::render(inputFile,encoding=encodi
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(warning=FALSE,echo = TRUE)
-
 library(rnaturalearth)
+library(rnaturalearthdata)
 library(ggplot2)
 library(sp)
-library(sf)
 library(plotly)
 library(ggmap)
-library(rnaturalearthdata)
-library(leaflet)
-library(viridis)
+library(ggridges)
 library(knitr)
+library(geosphere)
+pacman::p_load(tmap, sf, tidyverse, mapview, RColorBrewer, viridis,
+               leafpop, leaflet, leaflet.extras, mapdeck, plotly,
+               ggiraph, widgetframe, st)
 ```
 
 ```{=html}
@@ -39,10 +40,10 @@ El objetivo de este estudio será poder analizar las áreas de los distintos gla
 ```{r include=FALSE}
 glaciares <- ne_download(scale = 10, type = 'glaciated_areas', category = 'physical', returnclass = 'sf')
 sf_use_s2(FALSE)
-#pop<- ne_download(scale = 10, type = 'populated_places', category = 'cultural', returnclass='sf')
+pop<- ne_download(scale = 10, type = 'populated_places', category = 'cultural', returnclass='sf')
 df <- ne_countries(country = 'chile',returnclass = c("sf"))
 filtered_glaciares = st_filter(glaciares, df, .pred = st_intersects)
-#filtered_ciudades = st_filter(pop, df, .pred = st_intersects)
+filtered_ciudades = st_filter(pop, df, .pred = st_intersects)
 filtered_glaciares$name <-NULL
 filtered_glaciares <- mutate(filtered_glaciares, area = st_area(filtered_glaciares))
 latitudes = c(-56, -25)#y
@@ -64,7 +65,26 @@ lat <- cent_temp[-seq(1, length(cent_temp),2)]
 
 filtered_glaciares['cent_long'] <- long
 filtered_glaciares['cent_lat'] <- lat
-filtered_glaciares['contenido'] <- paste("Área glaciar: ", filtered_glaciares$area, "[m^2]")
+filtered_glaciares['contenido'] <- paste("Área glaciar: ", round(filtered_glaciares$area/1000000,2), "[Km^2]")
+
+list2 <-list("ciudad1","ciudad2")
+filtered_glaciares <- filtered_glaciares %>% mutate(Cercano = I(list(c(list2))))
+
+for (n in 1:70){ #recorre los glaciares de uno en uno
+  x <- list()
+  i = 1
+  for(m in 1:77){#recorre las ciudades de una en una
+    dist = distm(c(filtered_glaciares$cent_long[n], filtered_glaciares$cent_lat[n]), c(filtered_ciudades$LONGITUDE[m], filtered_ciudades$LATITUDE[m]), fun = distHaversine)
+    dist = dist/1000 #pasa la distancia en metro a KM
+    #print(dist)
+    if(dist <= 200){
+      #print("menor a 3000")
+      x[i] <- filtered_ciudades$NAMEASCII[m]
+      i <- i+1
+    }
+  }
+  filtered_glaciares$Cercano[n] <- I(list(c(x)))
+}
 ```
 
 ```{r glaciares,fig.cap="Mapa glaciares",echo=FALSE}
@@ -100,13 +120,14 @@ knitr::kable(head(filtered_glaciares$area,15),col.names='Área',digits = 3, form
 
 Si bien se encuentran solamente los 15 glaciares con mayores áreas, se puede encontrar la tabla entera en la sección de [anexos]. Luego de esto se procede a analizar la distancia de los glaciares con las ciudades, para poder relacionar cada glaciar con una ciudad.
 
-Para realizar este análisis, se procedió a tomar una distancia Haversine entre cada glaciar y todas las ciudades, para luego aplicar un criterio de distancia para de esta manera proceder a definir qué distancia cumplía con el criterio de estar "cerca" al glaciar y cuáles no. Este umbral fué determinado como **menor o igual a 50 [km]** Y de esta manera poder determinar la cantidad de ciudades que se encuentren a menos de 50 [km] de un glaciar. 
+Para realizar este análisis, se procedió a tomar una distancia Haversine entre cada glaciar y todas las ciudades, para luego aplicar un criterio de distancia para de esta manera proceder a definir qué distancia cumplía con el criterio de estar "cerca" al glaciar y cuáles no. Este umbral fué determinado como **menor o igual a 200 [km]** Y de esta manera poder determinar la cantidad de ciudades que se encuentren a menos de 200 [km] de un glaciar. 
 
 Con este criterio, se logró crear la tabla \@ref(tab:tabla-2) que muestra los glaciares y las ciudades que estaban cerca de estos. 
 ```{r tabla-2, echo=FALSE}
-subset <- filtered_glaciares[c("area","min_zoom")]
+subset <- filtered_glaciares[c("area","Cercano")]
+subset$Cercano <- lengths(subset$Cercano)
 subset$geometry<-NULL
-knitr::kable(head(subset,15),col.names=c("Glaciar","Ciudad"),row.names = FALSE,align='c',caption="15 glaciares mayores con ciudades cercanas")
+knitr::kable(head(subset,15),col.names=c("Glaciar","Cantidad de ciudades cercanas"),row.names = FALSE,align='c',caption="15 glaciares mayores con ciudades cercanas")
 ```
 
 Viendo esta tabla (tabla completa se encuentra [anexos]), se puede analizar la cantidad de ciudades que existen cerca de estos glaciares, 
@@ -121,5 +142,5 @@ Viendo esta tabla (tabla completa se encuentra [anexos]), se puede analizar la c
 knitr::kable(filtered_glaciares$area,col.names='Área',digits = 3, format.args = list(big.mark = ",",scientific = FALSE),align='c',row.names = FALSE,caption='Áreas glaciares')
 ```
 ```{r,echo=FALSE}
-knitr::kable(subset,col.names=c("Glaciar","Ciudad"),row.names = FALSE,align='c',caption="Glaciares con ciudades cercanas")
+knitr::kable(subset,col.names=c("Glaciar","Cantidad de Ciudades"),row.names = FALSE,align='c',caption="Glaciares con ciudades cercanas")
 ```
