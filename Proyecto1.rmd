@@ -6,10 +6,12 @@ output:
 bibliography: references.bib
 date: "`r Sys.Date()`"
 author: "Tomás Cantuarias - Raimundo Moraga - Victor Valero"
+knit: (function(inputFile,encoding) {rmarkdown::render(inputFile,encoding=encoding,output_file=file.path(dirname(inputFile),'index.html'))})
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+
 library(rnaturalearth)
 library(ggplot2)
 library(sp)
@@ -111,4 +113,3 @@ knitr::kable(filtered_glaciares$area,col.names='Área',digits = 3, format.args =
 ```{r,echo=FALSE}
 knitr::kable(subset,col.names=c("Glaciar","Ciudad"),row.names = FALSE,align='c',caption="Glaciares con ciudades cercanas")
 ```
-
