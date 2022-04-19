@@ -29,6 +29,7 @@ lat <- cent_temp[-seq(1, length(cent_temp),2)]
 filtered_glaciares['cent_long'] <- long
 filtered_glaciares['cent_lat'] <- lat
 
+filtered_glaciares['contenido'] <- paste("Área glaciar: ", filtered_glaciares$area)
 # dibujamos el mapa
 ggmap(mapa)
 
@@ -39,12 +40,12 @@ setView(lng = -71.5430, lat = -35.6751, zoom =4) %>%
   addPolygons(data = filtered_glaciares$geometry, 
               fillColor  = pal,
               fillOpacity = 0.8,
-              #addMarkers(lng = filtered_glaciares$cent_long,lat = filtered_glaciares$cent_lat, popup="text"),
               color = "#FFFF00", 
               weight = 1) %>% 
   addMarkers(lng = filtered_glaciares$cent_long,
              lat = filtered_glaciares$cent_lat, 
-             popup="text")
+             popup= filtered_glaciares$contenido
+            )
 
 
 
