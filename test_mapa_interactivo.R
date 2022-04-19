@@ -35,7 +35,7 @@ ggmap(mapa)
 pal <- viridis(n=length(unique(glaciares)),direction = 1)
 
 int_map <- filtered_glaciares %>% leaflet() %>% addProviderTiles("OpenStreetMap", group = "openstreetmap") %>%
-setView(lng = longitudes[2], lat = latitudes[2], zoom =10) %>% 
+setView(lng = -71.5430, lat = -35.6751, zoom =4) %>% 
   addPolygons(data = filtered_glaciares$geometry, 
               fillColor  = pal,
               fillOpacity = 0.8,
