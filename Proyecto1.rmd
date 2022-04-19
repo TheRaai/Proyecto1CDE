@@ -64,6 +64,7 @@ lat <- cent_temp[-seq(1, length(cent_temp),2)]
 
 filtered_glaciares['cent_long'] <- long
 filtered_glaciares['cent_lat'] <- lat
+filtered_glaciares['contenido'] <- paste("Área glaciar: ", filtered_glaciares$area, "[m^2]")
 ```
 
 ```{r glaciares,fig.cap="Mapa glaciares",echo=FALSE}
@@ -76,7 +77,7 @@ setView(lng = -71.5430, lat = -35.6751, zoom =4) %>%
               weight = 1) %>% 
   addMarkers(lng = filtered_glaciares$cent_long,
              lat = filtered_glaciares$cent_lat, 
-             popup = "text") %>%
+             popup = filtered_glaciares$contenido) %>%
   addProviderTiles("Stamen.Terrain",
                    group = "Stamen.Terrain"
   ) %>% 
