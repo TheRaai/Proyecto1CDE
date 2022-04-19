@@ -39,9 +39,12 @@ setView(lng = longitudes[2], lat = latitudes[2], zoom =10) %>%
   addPolygons(data = filtered_glaciares$geometry, 
               fillColor  = pal,
               fillOpacity = 0.8,
-              addMarkers(lng = filtered_glaciares$cent_long,lat = filtered_glaciares$cent_lat, popup="text"),
+              #addMarkers(lng = filtered_glaciares$cent_long,lat = filtered_glaciares$cent_lat, popup="text"),
               color = "#FFFF00", 
-              weight = 1)
+              weight = 1) %>% 
+  addMarkers(lng = filtered_glaciares$cent_long,
+             lat = filtered_glaciares$cent_lat, 
+             popup="text")
 
 
 
