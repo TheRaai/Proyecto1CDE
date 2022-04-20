@@ -62,14 +62,11 @@ cent <- st_point_on_surface(filtered_glaciares)
 cent_temp <- unlist(cent$geometry)
 long <- cent_temp[seq(1, length(cent_temp),2)]
 lat <- cent_temp[-seq(1, length(cent_temp),2)]
-
 filtered_glaciares['cent_long'] <- long
 filtered_glaciares['cent_lat'] <- lat
 filtered_glaciares['contenido'] <- paste("Área glaciar: ", round(filtered_glaciares$area/1000000,2), "[Km^2]")
-
 list2 <-list("ciudad1","ciudad2")
 filtered_glaciares <- filtered_glaciares %>% mutate(Cercano = I(list(c(list2))))
-
 for (n in 1:70){ #recorre los glaciares de uno en uno
   x <- list()
   i = 1
@@ -130,8 +127,12 @@ subset$geometry<-NULL
 knitr::kable(head(subset,15),col.names=c("Glaciar","Cantidad de ciudades cercanas"),row.names = FALSE,align='c',caption="15 glaciares mayores con ciudades cercanas")
 ```
 
-Viendo esta tabla (tabla completa se encuentra [anexos]), se puede analizar la cantidad de ciudades que existen cerca de estos glaciares, 
+Viendo esta tabla (tabla completa se encuentra [anexos]), se puede analizar la cantidad de ciudades que existen cerca de estos glaciares, en donde se ve que el mayor número de ciudades cercanas es **14** (revisar tabla \@ref(tab:tabla-c)), pero este glaciar no se encuentra nisiquiera entre los 15 con mayores áreas. Por otro lado, se puede ver que el glaciar con máyor área solamente tiene 1 ciudad cercana, que en esta caso sería **Villa O'Higgins**. Esto se puede dar gracias a que el glaciar se encuentra en la zona sur patagónica del país, por lo que no existen muchos lugares poblados por ese sector, dadas las condiciones atmosféricas del sur Chileno. Si bien revisando la tabla se puede ver que la hipótesis inicial de que a mayor área del glaciar, una mayor cantidad de ciudades cercanas no se cumple, se puede revisar un variograma para poder revisar la correlación entre estas dos variables. 
 
+Revisar gráfico \@ref(fig:vario).
+```{r vario,fig.cap="Variograma área de glacias vs cantidad de ciudades cercanas",echo=FALSE}
+plot(subset)
+```
 ## Bibliografía {-}
 
 <div id="refs"></div>
@@ -141,6 +142,6 @@ Viendo esta tabla (tabla completa se encuentra [anexos]), se puede analizar la c
 ```{r anexo, echo=FALSE}
 knitr::kable(filtered_glaciares$area,col.names='Área',digits = 3, format.args = list(big.mark = ",",scientific = FALSE),align='c',row.names = FALSE,caption='Áreas glaciares')
 ```
-```{r,echo=FALSE}
+```{r tabla-c,echo=FALSE}
 knitr::kable(subset,col.names=c("Glaciar","Cantidad de Ciudades"),row.names = FALSE,align='c',caption="Glaciares con ciudades cercanas")
 ```
