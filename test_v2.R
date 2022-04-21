@@ -72,5 +72,26 @@ int_map <- filtered_glaciares %>% leaflet() %>% addProviderTiles("OpenStreetMap"
   )
 
 
+subset <- filtered_glaciares[c("area","Cercano")]
+subset$Cercano <- lengths(subset$Cercano)
+subset$geometry<-NULL
 
+
+gla <- filtered_glaciares[c("cent_long")]
+gla$geometry<-NULL
+gla$ciudades_lon <- filtered_ciudades$LATITUDE[1:70]
+
+coordinates(gla) = ~cent_long+ciudades_lon
+
+proj4string(gla) <- 
+  CRS("+proj=longlat +datum=WGS84")
+gla
+
+gla$extent
+
+library(gstat)
+library(corrplot)
+variogram(gla@coords,data=gla)
+cor <- cor(subset)
+corrplot(cor)
 int_map

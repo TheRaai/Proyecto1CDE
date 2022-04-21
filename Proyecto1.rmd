@@ -20,6 +20,7 @@ library(ggmap)
 library(ggridges)
 library(knitr)
 library(geosphere)
+library(corrplot)
 pacman::p_load(tmap, sf, tidyverse, mapview, RColorBrewer, viridis,
                leafpop, leaflet, leaflet.extras, mapdeck, plotly,
                ggiraph, widgetframe, st)
@@ -127,12 +128,17 @@ subset$geometry<-NULL
 knitr::kable(head(subset,15),col.names=c("Glaciar","Cantidad de ciudades cercanas"),row.names = FALSE,align='c',caption="15 glaciares mayores con ciudades cercanas")
 ```
 
-Viendo esta tabla (tabla completa se encuentra [anexos]), se puede analizar la cantidad de ciudades que existen cerca de estos glaciares, en donde se ve que el mayor número de ciudades cercanas es **14** (revisar tabla \@ref(tab:tabla-c)), pero este glaciar no se encuentra nisiquiera entre los 15 con mayores áreas. Por otro lado, se puede ver que el glaciar con máyor área solamente tiene 1 ciudad cercana, que en esta caso sería **Villa O'Higgins**. Esto se puede dar gracias a que el glaciar se encuentra en la zona sur patagónica del país, por lo que no existen muchos lugares poblados por ese sector, dadas las condiciones atmosféricas del sur Chileno. Si bien revisando la tabla se puede ver que la hipótesis inicial de que a mayor área del glaciar, una mayor cantidad de ciudades cercanas no se cumple, se puede revisar un variograma para poder revisar la correlación entre estas dos variables. 
+Viendo esta tabla (tabla completa se encuentra [anexos]), se puede analizar la cantidad de ciudades que existen cerca de estos glaciares, en donde se ve que el mayor número de ciudades cercanas es **14** (revisar tabla \@ref(tab:tabla-c)), pero este glaciar no se encuentra nisiquiera entre los 15 con mayores áreas. Por otro lado, se puede ver que el glaciar con máyor área solamente tiene 1 ciudad cercana, que en esta caso sería **Villa O'Higgins**. Esto se puede dar gracias a que el glaciar se encuentra en la zona sur patagónica del país, por lo que no existen muchos lugares poblados por ese sector, dadas las condiciones atmosféricas del sur Chileno. Si bien revisando la tabla se puede ver que la hipótesis inicial de que a mayor área del glaciar, una mayor cantidad de ciudades cercanas no se cumple, se puede revisar un gráfico de correlación para poder revisar la correlación entre estas dos variables. 
 
 Revisar gráfico \@ref(fig:vario).
-```{r vario,fig.cap="Variograma área de glacias vs cantidad de ciudades cercanas",echo=FALSE}
-plot(subset)
+```{r vario,fig.cap="Correlación área de glaciares vs cantidad de ciudades cercanas",echo=FALSE}
+cor <- cor(subset)
+corrplot(cor)
 ```
+Con esto se puede ver que existe una baja correlación entre estas dos variables, teniendo un valor de **-0.128** por lo cual no existe una correlación significante entre estos datos, Concluyendo que la hipótesis inicial es falsa. 
+
+A modo de conclusión, se puede ver que al inspeccionar los glaciares, la localización de estos importa más que el área de estos al momento de poder determinar la cantidad de ciudades que se encuentren cercanas a este. Si bien el glaciar más grande tiene un área bastante mayor al que tiene una mayor cantidad de ciudades cercanas, el primero se encuentra en un área patagónica que tiene una densidad poblacional bastante baja dada las condiciones de vida que existen en ese sector (gracias al clima, cercanía con el resto del país, entre otros factores) mientras que el segundo se encuentra en la zona norte del país, donde existen más ciudades que en la zona sur.
+
 ## Bibliografía {-}
 
 <div id="refs"></div>
@@ -143,5 +149,7 @@ plot(subset)
 knitr::kable(filtered_glaciares$area,col.names='Área',digits = 3, format.args = list(big.mark = ",",scientific = FALSE),align='c',row.names = FALSE,caption='Áreas glaciares')
 ```
 ```{r tabla-c,echo=FALSE}
-knitr::kable(subset,col.names=c("Glaciar","Cantidad de Ciudades"),row.names = FALSE,align='c',caption="Glaciares con ciudades cercanas")
+subset2 <- subset[order(subset$Cercano,decreasing=TRUE),]
+
+knitr::kable(subset2,col.names=c("Glaciar","Cantidad de Ciudades"),row.names = FALSE,align='c',caption="Glaciares con ciudades cercanas")
 ```
