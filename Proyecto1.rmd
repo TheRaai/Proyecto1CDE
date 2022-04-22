@@ -21,6 +21,7 @@ library(ggridges)
 library(knitr)
 library(geosphere)
 library(corrplot)
+library(units)
 pacman::p_load(tmap, sf, tidyverse, mapview, RColorBrewer, viridis,
                leafpop, leaflet, leaflet.extras, mapdeck, plotly,
                ggiraph, widgetframe, st)
@@ -51,6 +52,7 @@ latitudes = c(-56, -25)#y
 longitudes <- c(-78, -65) #x
 pal <- viridis(n=length(unique(glaciares)),direction = 1)
 filtered_glaciares <- filtered_glaciares[order(filtered_glaciares$area,decreasing=TRUE),]
+filtered_glaciares$area <- round(set_units(filtered_glaciares$area,km^2),2)
 ```
 
 ## Metodología {.unnumbered}
@@ -65,7 +67,7 @@ long <- cent_temp[seq(1, length(cent_temp),2)]
 lat <- cent_temp[-seq(1, length(cent_temp),2)]
 filtered_glaciares['cent_long'] <- long
 filtered_glaciares['cent_lat'] <- lat
-filtered_glaciares['contenido'] <- paste("Área glaciar: ", round(filtered_glaciares$area/1000000,2), "[Km^2]")
+filtered_glaciares['contenido'] <- paste("Área glaciar: ", filtered_glaciares$area, "[Km^2]")
 list2 <-list("ciudad1","ciudad2")
 filtered_glaciares <- filtered_glaciares %>% mutate(Cercano = I(list(c(list2))))
 for (n in 1:70){ #recorre los glaciares de uno en uno
