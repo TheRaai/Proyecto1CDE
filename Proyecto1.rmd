@@ -11,27 +11,19 @@ knit: (function(inputFile,encoding) {rmarkdown::render(inputFile,encoding=encodi
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(warning=FALSE,echo = TRUE)
-library(rnaturalearth)
-library(rnaturalearthdata)
-library(ggplot2)
-library(sp)
-library(plotly)
-library(ggmap)
-library(ggridges)
-library(knitr)
-library(geosphere)
-library(corrplot)
-library(units)
+#Cargado de librerías
 pacman::p_load(tmap, sf, tidyverse, mapview, RColorBrewer, viridis,
-               leafpop, leaflet, leaflet.extras, mapdeck, plotly,
-               ggiraph, widgetframe, st)
+               leafpop, leaflet, leaflet.extras,ggiraph, widgetframe, 
+               st,rnaturalearth, rnaturalearthdata, sp,knitr,geosphere,
+               corrplot,units)
 ```
 
-```{=html}
-<style>
+```{=html} 
+<style> 
 body {
 text-align: justify}
 </style>
+<!-- Para tener el texto justificado--> 
 ```
 ## Introducción {.unnumbered}
 
@@ -40,27 +32,28 @@ Dentro de Chile, existen varios tipos de fenómenos geológicos, ya que existen 
 El objetivo de este estudio será poder analizar las áreas de los distintos glaciares existentes en Chile y las ciudades más cercanas a estos, y poder demostrar que los glaciares con áreas mayores tienden a tener una mayor cantidad de ciudades cercanas que aquellos que tienen menores áreas.
 
 ```{r include=FALSE}
-glaciares <- ne_download(scale = 10, type = 'glaciated_areas', category = 'physical', returnclass = 'sf')
 sf_use_s2(FALSE)
+#Descarga de datos
+glaciares <- ne_download(scale = 10, type = 'glaciated_areas', category = 'physical', returnclass = 'sf')
 pop<- ne_download(scale = 10, type = 'populated_places', category = 'cultural', returnclass='sf')
 df <- ne_countries(country = 'chile',returnclass = c("sf"))
+#Sacar solamente los datos de Chile
 filtered_glaciares = st_filter(glaciares, df, .pred = st_intersects)
 filtered_ciudades = st_filter(pop, df, .pred = st_intersects)
-filtered_glaciares$name <-NULL
-filtered_glaciares <- mutate(filtered_glaciares, area = st_area(filtered_glaciares))
-latitudes = c(-56, -25)#y
-longitudes <- c(-78, -65) #x
+filtered_glaciares$name <-NULL #Borrar los nombres, no nos sirven
+filtered_glaciares <- mutate(filtered_glaciares, area = st_area(filtered_glaciares)) #Sacar area
+filtered_glaciares <- filtered_glaciares[order(filtered_glaciares$area,decreasing=TRUE),] #Ordenar por área
+filtered_glaciares$area <- round(set_units(filtered_glaciares$area,km^2),2) #Convertir area a km^2 de m^2
 pal <- viridis(n=length(unique(glaciares)),direction = 1)
-filtered_glaciares <- filtered_glaciares[order(filtered_glaciares$area,decreasing=TRUE),]
-filtered_glaciares$area <- round(set_units(filtered_glaciares$area,km^2),2)
 ```
 
 ## Metodología {.unnumbered}
 
-Para poder demostrar esto, se hará uso de la librería **RNaturalEarth** para conseguir las posiciones de los glaciares, utilizando un enfoque para solamente analizar los glaciares que existen en Chile. Esto se hace aplicando un filtro que intersecte un conjunto de datos que contiene las distintas ciudades de Chile, con el conjunto de datos que incluye todos los glaciares del mundo. Al aplicar esto, se consigue que existen 70 glaciares alrededor de todo Chile. Además, se confirma esta data gracias a la información entregada por [@camara.cl].
+Para poder demostrar esto, se hará uso de la librería **RNaturalEarth** para conseguir las posiciones de los glaciares, utilizando un enfoque para solamente analizar los glaciares que existen en Chile. Esto se hace aplicando un filtro que intersecte un conjunto de datos que contiene las distintas ciudades de Chile, con el conjunto de datos que incluye todos los glaciares del mundo. Al aplicar esto, se consigue que existen 70 glaciares alrededor de todo Chile. Si bien se logra conseguir la información de los distintos glaciares de Chile, no se logra conseguir los nombres de estos gracias a que la librería tiene data incompleta, por lo cual se ignora el nombre de estos para términos de análisis. Además, se confirma esta data gracias a la información entregada por [@camara.cl].
 
 Luego de esto, se hace un mapa que muestre los glaciares de chile (Ver gráfico \@ref(fig:glaciares)).
 ```{r echo=FALSE,message=FALSE}
+#Sacar las ciudades cercanas a cada glaciar
 cent <- st_point_on_surface(filtered_glaciares)
 cent_temp <- unlist(cent$geometry)
 long <- cent_temp[seq(1, length(cent_temp),2)]
@@ -76,9 +69,7 @@ for (n in 1:70){ #recorre los glaciares de uno en uno
   for(m in 1:77){#recorre las ciudades de una en una
     dist = distm(c(filtered_glaciares$cent_long[n], filtered_glaciares$cent_lat[n]), c(filtered_ciudades$LONGITUDE[m], filtered_ciudades$LATITUDE[m]), fun = distHaversine)
     dist = dist/1000 #pasa la distancia en metro a KM
-    #print(dist)
     if(dist <= 200){
-      #print("menor a 3000")
       x[i] <- filtered_ciudades$NAMEASCII[m]
       i <- i+1
     }
@@ -88,6 +79,7 @@ for (n in 1:70){ #recorre los glaciares de uno en uno
 ```
 
 ```{r glaciares,fig.cap="Mapa glaciares",echo=FALSE}
+#Crear mapa interactivo
 int_map <- filtered_glaciares %>% leaflet() %>% addProviderTiles("OpenStreetMap", group = "openstreetmap") %>%
 setView(lng = -71.5430, lat = -35.6751, zoom =4) %>% 
   addPolygons(data = filtered_glaciares$geometry, 
@@ -115,6 +107,7 @@ int_map
 Luego de filtrar los glaciares Chilenos, y conseguir las áreas de estos, se pueden resumir en la tabla \@ref(tab:tabla-1):
 
 ```{r tabla-1, echo=FALSE}
+#Tabla de los 15 glaciares con mayor área
 knitr::kable(head(filtered_glaciares$area,15),col.names='Área',digits = 3, format.args = list(big.mark = ",",scientific = FALSE),align='c',row.names = FALSE,caption="15 mayores áreas")
 ```
 
@@ -124,9 +117,10 @@ Para realizar este análisis, se procedió a tomar una distancia Haversine entre
 
 Con este criterio, se logró crear la tabla \@ref(tab:tabla-2) que muestra los glaciares y las ciudades que estaban cerca de estos. 
 ```{r tabla-2, echo=FALSE}
-subset <- filtered_glaciares[c("area","Cercano")]
-subset$Cercano <- lengths(subset$Cercano)
-subset$geometry<-NULL
+subset <- filtered_glaciares[c("area","Cercano")] #Solo queremos las ciudades cercanas y el área de los glaciares
+subset$Cercano <- lengths(subset$Cercano) #Sacar cantidad de ciudades por glaciar
+subset$geometry<-NULL 
+#Tabla de area y cantidad de ciudades
 knitr::kable(head(subset,15),col.names=c("Glaciar","Cantidad de ciudades cercanas"),row.names = FALSE,align='c',caption="15 glaciares mayores con ciudades cercanas")
 ```
 
@@ -134,8 +128,10 @@ Viendo esta tabla (tabla completa se encuentra [anexos]), se puede analizar la c
 
 Revisar gráfico \@ref(fig:vario).
 ```{r vario,fig.cap="Correlación área de glaciares vs cantidad de ciudades cercanas",echo=FALSE}
+#Grafico de correlacion
 cor <- cor(subset)
 corrplot(cor)
+knitr::kable(cor)
 ```
 Con esto se puede ver que existe una baja correlación entre estas dos variables, teniendo un valor de **-0.128** por lo cual no existe una correlación significante entre estos datos, Concluyendo que la hipótesis inicial es falsa. 
 
